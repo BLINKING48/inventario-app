@@ -1,36 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login Proveedor</title>
+  <title>Inventario</title>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; margin: 50px; }
-    input { display: block; margin: 10px 0; padding: 8px; width: 250px; }
-    button { padding: 8px 16px; }
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    input, textarea { display: block; margin: 10px 0; padding: 8px; width: 300px; }
+    button { padding: 10px 20px; }
   </style>
 </head>
 <body>
-  <h1>Login Proveedor</h1>
-  <input type="text" id="usuario" placeholder="Nombre del proveedor">
-  <input type="password" id="contrasena" placeholder="Contraseña">
-  <button onclick="ingresar()">Ingresar</button>
+  <h1>Inventario - <span id="nombreProveedor"></span></h1>
+
+  <input type="file" id="imagen" accept="image/*">
+  <input type="number" id="cantidad" placeholder="Cantidad">
+  <button onclick="enviarInventario()">Enviar a inventario</button>
 
   <script>
-    function ingresar() {
-      const usuario = document.getElementById('usuario').value.toLowerCase();
-      const contrasena = document.getElementById('contrasena').value;
+    const proveedor = localStorage.getItem("proveedor");
+    if (!proveedor) {
+      alert("Debe iniciar sesión primero");
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("nombreProveedor").innerText = proveedor;
+    }
 
-      const usuarios = {
-        "proveedor1": "1234",
-        "proveedor2": "abcd"
+    function enviarInventario() {
+      const archivo = document.getElementById("imagen").files[0];
+      const cantidad = document.getElementById("cantidad").value;
+
+      if (!archivo || !cantidad) {
+        alert("Debe seleccionar una imagen y una cantidad");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        const base64Image = reader.result;
+        const data = {
+          proveedor,
+          cantidad,
+          imagen: base64Image
+        };
+
+        fetch("https://script.google.com/a/macros/whirlpool.com/s/AKfycbyRMbCaocZOOfvcbxq7lDz9TCR_pCOaR17FpSdlniPbG-nLZP4hX6cNQoKoxNudGVZY/exec", {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+        .then(res => res.text())
+        .then(response => {
+          alert("Inventario enviado correctamente");
+          document.getElementById("cantidad").value = "";
+          document.getElementById("imagen").value = "";
+        })
+        .catch(err => {
+          alert("Error al enviar inventario");
+          console.error(err);
+        });
       };
 
-      if (usuarios[usuario] === contrasena) {
-        localStorage.setItem("proveedor", usuario);
-        window.location.href = "inventario.html";
-      } else {
-        alert("Usuario o contraseña incorrectos");
-      }
+      reader.readAsDataURL(archivo);
     }
   </script>
 </body>
