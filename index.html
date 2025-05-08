@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Inventario</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .hidden { display: none; }
+    img { max-width: 100px; }
+  </style>
+</head>
+<body>
+
+  <div id="login-section">
+    <h2>Login Proveedor</h2>
+    <input type="text" id="username" placeholder="Nombre del proveedor"><br>
+    <input type="password" id="password" placeholder="Contraseña"><br>
+    <button onclick="login()">Ingresar</button>
+  </div>
+
+  <div id="upload-section" class="hidden">
+    <h2>Subir Inventario</h2>
+    <input type="file" accept="image/*" id="imageInput"><br>
+    <input type="number" id="cantidad" placeholder="Cantidad"><br>
+    <button onclick="enviarInventario()">Enviar a Inventario</button>
+    <div id="preview"></div>
+  </div>
+
+  <div id="admin-section" class="hidden">
+    <h2>Historial de Inventario</h2>
+    <div id="historial"></div>
+  </div>
+
+  <script>
+    let currentUser = '';
+
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      
+      if (user === 'admin' && pass === 'admin123') {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('admin-section').classList.remove('hidden');
+        // Aquí puedes cargar el historial desde Google Sheets
+      } else if (user && pass) {
+        currentUser = user;
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('upload-section').classList.remove('hidden');
+      } else {
+        alert("Usuario o contraseña inválido");
+      }
+    }
+
+    function enviarInventario() {
+      const cantidad = document.getElementById('cantidad').value;
+      const imagen = document.getElementById('imageInput').files[0];
+
+      if (!cantidad || !imagen) {
+        alert("Falta cantidad o imagen");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Image = e.target.result;
+
+        // Aquí haces el envío a Google Apps Script (Google Sheets)
+        fetch('https://script.google.com/macros/s/TU_URL_DEL_WEBAPP/exec', {
+          method: 'POST',
+          body: JSON.stringify({
+            proveedor: currentUser,
+            cantidad: cantidad,
+            imagen: base64Image,
+            fecha: new Date().toISOString()
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then(res => res.text())
+          .then(data => {
+            alert("Inventario enviado");
+            document.getElementById('cantidad').value = '';
+            document.getElementById('imageInput').value = '';
+          });
+      };
+      reader.readAsDataURL(imagen);
+    }
+  </script>
+
+</body>
+</html>
