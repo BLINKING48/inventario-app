@@ -1,130 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Login Proveedor</title>
   <meta charset="UTF-8">
-  <title>Inventario Proveedores</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f7f7f7;
-    }
-
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin: auto;
-    }
-
-    input, button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-    }
-
-    button {
-      background: #ffcc00;
-      color: black;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #ffdb4d;
-    }
-
-    .preview img {
-      max-width: 100%;
-      margin-top: 10px;
-    }
-
-    .success {
-      color: green;
-      text-align: center;
-      margin-top: 15px;
-    }
+    body { font-family: Arial, sans-serif; margin: 50px; }
+    input { display: block; margin: 10px 0; padding: 8px; width: 250px; }
+    button { padding: 8px 16px; }
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <h2>Subir Inventario</h2>
-
-    <input type="text" id="proveedor" placeholder="Nombre del proveedor (ej. Proveedor1)">
-    <input type="number" id="cantidad" placeholder="Cantidad">
-    <input type="file" id="imagen" accept="image/*">
-    
-    <button onclick="enviarInventario()">Enviar a Inventario</button>
-    
-    <div class="preview" id="preview"></div>
-    <div class="success" id="mensaje"></div>
-  </div>
+  <h1>Login Proveedor</h1>
+  <input type="text" id="usuario" placeholder="Nombre del proveedor">
+  <input type="password" id="contrasena" placeholder="Contraseña">
+  <button onclick="ingresar()">Ingresar</button>
 
   <script>
-    function enviarInventario() {
-      const proveedor = document.getElementById('proveedor').value.trim();
-      const cantidad = document.getElementById('cantidad').value.trim();
-      const imagenInput = document.getElementById('imagen');
-      const mensaje = document.getElementById('mensaje');
-      const preview = document.getElementById('preview');
+    function ingresar() {
+      const usuario = document.getElementById('usuario').value.toLowerCase();
+      const contrasena = document.getElementById('contrasena').value;
 
-      mensaje.innerText = '';
-      preview.innerHTML = '';
-
-      if (!proveedor || !cantidad || !imagenInput.files.length) {
-        alert("Por favor completa todos los campos.");
-        return;
-      }
-
-      const archivo = imagenInput.files[0];
-      const lector = new FileReader();
-
-      lector.onload = function(e) {
-        const imagenBase64 = e.target.result;
-
-        // Mostrar preview
-        preview.innerHTML = `<img src="${imagenBase64}">`;
-
-        // Enviar a Apps Script
-        fetch("https://script.google.com/a/macros/whirlpool.com/s/AKfycbyRMbCaocZOOfvcbxq7lDz9TCR_pCOaR17FpSdlniPbG-nLZP4hX6cNQoKoxNudGVZY/exec", {
-          method: "POST",
-          body: JSON.stringify({
-            proveedor: proveedor,
-            cantidad: cantidad,
-            imagen: imagenBase64,
-            fecha: new Date().toISOString()
-          }),
-          headers: {
-            "Content-Type": "application/json"
-          }
-        })
-        .then(res => res.text())
-        .then(respuesta => {
-          mensaje.innerText = "✅ Inventario enviado correctamente";
-          document.getElementById('cantidad').value = '';
-          document.getElementById('imagen').value = '';
-        })
-        .catch(error => {
-          mensaje.innerText = "❌ Error al enviar: " + error;
-        });
+      const usuarios = {
+        "proveedor1": "1234",
+        "proveedor2": "abcd"
       };
 
-      lector.readAsDataURL(archivo);
+      if (usuarios[usuario] === contrasena) {
+        localStorage.setItem("proveedor", usuario);
+        window.location.href = "inventario.html";
+      } else {
+        alert("Usuario o contraseña incorrectos");
+      }
     }
   </script>
-
 </body>
 </html>
