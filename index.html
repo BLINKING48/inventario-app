@@ -1,89 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <title>Inventario Proveedores</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Inventario</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .hidden { display: none; }
-    img { max-width: 100px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: auto;
+    }
+
+    input, button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+
+    button {
+      background: #ffcc00;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #ffdb4d;
+    }
+
+    .preview img {
+      max-width: 100%;
+      margin-top: 10px;
+    }
+
+    .success {
+      color: green;
+      text-align: center;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
 
-  <div id="login-section">
-    <h2>Login Proveedor</h2>
-    <input type="text" id="username" placeholder="Nombre del proveedor"><br>
-    <input type="password" id="password" placeholder="Contraseña"><br>
-    <button onclick="login()">Ingresar</button>
-  </div>
-
-  <div id="upload-section" class="hidden">
+  <div class="card">
     <h2>Subir Inventario</h2>
-    <input type="file" accept="image/*" id="imageInput"><br>
-    <input type="number" id="cantidad" placeholder="Cantidad"><br>
-    <button onclick="enviarInventario()">Enviar a Inventario</button>
-    <div id="preview"></div>
-  </div>
 
-  <div id="admin-section" class="hidden">
-    <h2>Historial de Inventario</h2>
-    <div id="historial"></div>
+    <input type="text" id="proveedor" placeholder="Nombre del proveedor (ej. Proveedor1)">
+    <input type="number" id="cantidad" placeholder="Cantidad">
+    <input type="file" id="imagen" accept="image/*">
+    
+    <button onclick="enviarInventario()">Enviar a Inventario</button>
+    
+    <div class="preview" id="preview"></div>
+    <div class="success" id="mensaje"></div>
   </div>
 
   <script>
-    let currentUser = '';
-
-    function login() {
-      const user = document.getElementById('username').value;
-      const pass = document.getElementById('password').value;
-      
-      if (user === 'admin' && pass === 'admin123') {
-        document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('admin-section').classList.remove('hidden');
-        // Aquí puedes cargar el historial desde Google Sheets
-      } else if (user && pass) {
-        currentUser = user;
-        document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('upload-section').classList.remove('hidden');
-      } else {
-        alert("Usuario o contraseña inválido");
-      }
-    }
-
     function enviarInventario() {
-      const cantidad = document.getElementById('cantidad').value;
-      const imagen = document.getElementById('imageInput').files[0];
+      const proveedor = document.getElementById('proveedor').value.trim();
+      const cantidad = document.getElementById('cantidad').value.trim();
+      const imagenInput = document.getElementById('imagen');
+      const mensaje = document.getElementById('mensaje');
+      const preview = document.getElementById('preview');
 
-      if (!cantidad || !imagen) {
-        alert("Falta cantidad o imagen");
+      mensaje.innerText = '';
+      preview.innerHTML = '';
+
+      if (!proveedor || !cantidad || !imagenInput.files.length) {
+        alert("Por favor completa todos los campos.");
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Image = e.target.result;
+      const archivo = imagenInput.files[0];
+      const lector = new FileReader();
 
-        // Aquí haces el envío a Google Apps Script (Google Sheets)
-        fetch('https://script.google.com/macros/s/TU_URL_DEL_WEBAPP/exec', {
-          method: 'POST',
+      lector.onload = function(e) {
+        const imagenBase64 = e.target.result;
+
+        // Mostrar preview
+        preview.innerHTML = `<img src="${imagenBase64}">`;
+
+        // Enviar a Apps Script
+        fetch("https://script.google.com/a/macros/whirlpool.com/s/AKfycbyRMbCaocZOOfvcbxq7lDz9TCR_pCOaR17FpSdlniPbG-nLZP4hX6cNQoKoxNudGVZY/exec", {
+          method: "POST",
           body: JSON.stringify({
-            proveedor: currentUser,
+            proveedor: proveedor,
             cantidad: cantidad,
-            imagen: base64Image,
+            imagen: imagenBase64,
             fecha: new Date().toISOString()
           }),
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json"
           }
-        }).then(res => res.text())
-          .then(data => {
-            alert("Inventario enviado");
-            document.getElementById('cantidad').value = '';
-            document.getElementById('imageInput').value = '';
-          });
+        })
+        .then(res => res.text())
+        .then(respuesta => {
+          mensaje.innerText = "✅ Inventario enviado correctamente";
+          document.getElementById('cantidad').value = '';
+          document.getElementById('imagen').value = '';
+        })
+        .catch(error => {
+          mensaje.innerText = "❌ Error al enviar: " + error;
+        });
       };
-      reader.readAsDataURL(imagen);
+
+      lector.readAsDataURL(archivo);
     }
   </script>
 
